@@ -1,0 +1,47 @@
+"""
+Centralised configuration for PolicyPilot AI.
+
+Loads settings from a .env file (if present) via python-dotenv,
+then reads environment variables with sensible defaults so the app
+never crashes on a missing value — it will surface a clear Streamlit
+warning instead.
+"""
+
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# ── Load .env from the project root ─────────────────────────────────
+_PROJECT_ROOT = Path(__file__).resolve().parent
+load_dotenv(_PROJECT_ROOT / ".env")
+
+def get_secret(key: str, default: str | None = None) -> str | None:
+    """Fetch from st.secrets first, then fall back to env var."""
+    try:
+        import streamlit as st
+        if key in st.secrets:
+            return st.secrets[key]
+    except Exception:
+        pass
+    return os.getenv(key, default)
+
+# ── Core settings ────────────────────────────────────────────────────
+GOOGLE_API_KEY: str | None = get_secret("GOOGLE_API_KEY")
+CHAT_MODEL: str = get_secret("CHAT_MODEL", "gemini-2.5-flash")
+EMBEDDING_MODEL: str = get_secret("EMBEDDING_MODEL", "gemini-embedding-001")
+
+# ── Derived paths ────────────────────────────────────────────────────
+SAMPLE_DOCS_DIR: Path = _PROJECT_ROOT / "sample_docs"
+UPLOADED_DOCS_DIR: Path = _PROJECT_ROOT / "uploaded_docs"
+OUTPUTS_DIR: Path = _PROJECT_ROOT / "outputs"
+VECTORSTORE_DIR: Path = _PROJECT_ROOT / "vectorstore_data"
+
+# Ensure runtime directories exist
+for _dir in (SAMPLE_DOCS_DIR, UPLOADED_DOCS_DIR, OUTPUTS_DIR, VECTORSTORE_DIR):
+    _dir.mkdir(parents=True, exist_ok=True)
+
+
+def api_key_is_set() -> bool:
+    """Return True when a non-empty API key is available."""
+    return bool(GOOGLE_API_KEY and GOOGLE_API_KEY.strip()
+                and GOOGLE_API_KEY != "your-google-api-key-here")

@@ -1,0 +1,23 @@
+# Environment secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Streamlit
+.streamlit/
+
+# Project runtime directories
+outputs/
+uploaded_docs/
+
+# IDEs
+.idea/
+.vscode/
+
+# Virtual environments
+venv/
+.venv/
+env/
