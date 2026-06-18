@@ -12,16 +12,16 @@ from __future__ import annotations
 from google import genai
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 
-from config import GOOGLE_API_KEY, CHAT_MODEL, EMBEDDING_MODEL, api_key_is_set
-
-# ── Configure the low-level SDK once ────────────────────────────────
+import config
+# ── Configure the low-level SDK lazily ─────────────────────────────
 _client: genai.Client | None = None
-if api_key_is_set():
-    _client = genai.Client(api_key=GOOGLE_API_KEY)
-
 
 def get_genai_client() -> genai.Client:
     """Return the shared google-genai Client instance."""
+    global _client
+    if _client is None and config.api_key_is_set():
+        _client = genai.Client(api_key=config.GOOGLE_API_KEY)
+        
     if _client is None:
         raise RuntimeError(
             "GOOGLE_API_KEY is not set. "
@@ -36,14 +36,14 @@ def get_chat_llm(**kwargs) -> ChatGoogleGenerativeAI:
     Raises RuntimeError when the API key is missing so callers can
     surface a friendly message rather than a cryptic traceback.
     """
-    if not api_key_is_set():
+    if not config.api_key_is_set():
         raise RuntimeError(
             "GOOGLE_API_KEY is not set. "
             "Add it to your .env file (see .env.example)."
         )
     defaults = {
-        "model": CHAT_MODEL,
-        "google_api_key": GOOGLE_API_KEY,
+        "model": config.CHAT_MODEL,
+        "google_api_key": config.GOOGLE_API_KEY,
         "temperature": 0.3,
         "convert_system_message_to_human": True,
     }
@@ -53,14 +53,14 @@ def get_chat_llm(**kwargs) -> ChatGoogleGenerativeAI:
 
 def get_embeddings(**kwargs) -> GoogleGenerativeAIEmbeddings:
     """Return a LangChain embeddings wrapper for Google Gemini."""
-    if not api_key_is_set():
+    if not config.api_key_is_set():
         raise RuntimeError(
             "GOOGLE_API_KEY is not set. "
             "Add it to your .env file (see .env.example)."
         )
     defaults = {
-        "model": f"models/{EMBEDDING_MODEL}",
-        "google_api_key": GOOGLE_API_KEY,
+        "model": f"models/{config.EMBEDDING_MODEL}",
+        "google_api_key": config.GOOGLE_API_KEY,
     }
     defaults.update(kwargs)
     return GoogleGenerativeAIEmbeddings(**defaults)

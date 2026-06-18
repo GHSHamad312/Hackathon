@@ -25,10 +25,14 @@ def get_secret(key: str, default: str | None = None) -> str | None:
         pass
     return os.getenv(key, default)
 
-# ── Core settings ────────────────────────────────────────────────────
-GOOGLE_API_KEY: str | None = get_secret("GOOGLE_API_KEY")
-CHAT_MODEL: str = get_secret("CHAT_MODEL", "gemini-2.5-flash")
-EMBEDDING_MODEL: str = get_secret("EMBEDDING_MODEL", "gemini-embedding-001")
+def __getattr__(name: str):
+    if name == "GOOGLE_API_KEY":
+        return get_secret("GOOGLE_API_KEY")
+    if name == "CHAT_MODEL":
+        return get_secret("CHAT_MODEL", "gemini-2.5-flash")
+    if name == "EMBEDDING_MODEL":
+        return get_secret("EMBEDDING_MODEL", "gemini-embedding-001")
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 # ── Derived paths ────────────────────────────────────────────────────
 SAMPLE_DOCS_DIR: Path = _PROJECT_ROOT / "sample_docs"
@@ -43,5 +47,6 @@ for _dir in (SAMPLE_DOCS_DIR, UPLOADED_DOCS_DIR, OUTPUTS_DIR, VECTORSTORE_DIR):
 
 def api_key_is_set() -> bool:
     """Return True when a non-empty API key is available."""
-    return bool(GOOGLE_API_KEY and GOOGLE_API_KEY.strip()
-                and GOOGLE_API_KEY != "your-google-api-key-here")
+    key = get_secret("GOOGLE_API_KEY")
+    return bool(key and key.strip()
+                and key != "your-google-api-key-here" and key != "your_api_key_here")

@@ -274,7 +274,7 @@ st.markdown(
 )
 
 # ── Imports ───────────────────────────────────────────────────────────
-from config import api_key_is_set, GOOGLE_API_KEY
+from config import api_key_is_set
 from rag.ingest import ingest_pdfs
 from rag.vectorstore import build_vectorstore, index_exists
 from rag.retrieval import retrieve, format_context
