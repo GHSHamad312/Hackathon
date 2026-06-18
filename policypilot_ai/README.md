@@ -14,6 +14,10 @@
 </p>
 
 <p align="center">
+  <b>Online at https://policypilotai-rn8aekmr5wsglf9qzk7gxh.streamlit.app/</b>
+</p>
+
+<p align="center">
   <sub>An AI-powered enterprise assistant that automates HR & operations workflows using a 6-agent agentic architecture with Retrieval-Augmented Generation (RAG) over your company's actual policy documents.</sub>
 </p>
 
@@ -546,18 +550,7 @@ A `.devcontainer/devcontainer.json` is included for VS Code / GitHub Codespaces:
 # The container will auto-install all dependencies
 ```
 
----
 
-## 🗺️ Future Roadmap
-
-- [ ] 🔗 **Real API Integrations** — Connect Action Agent to actual Jira, Slack, and HRIS APIs
-- [ ] 🧠 **Memory & Context Window** — Multi-turn pipeline conversations with context persistence
-- [ ] 📊 **Analytics Dashboard** — Historical compliance trends across workflows
-- [ ] 🌍 **Multi-Language Support** — Policy documents and generated artifacts in multiple languages
-- [ ] 🔒 **Role-Based Access Control** — Different permission levels for HR, IT, and managers
-- [ ] 📱 **Mobile-Responsive UI** — Enhanced mobile experience for on-the-go approvals
-
----
 
 ## 👥 Team
 
@@ -565,7 +558,7 @@ Built with ❤️ at **AI Hackathon 2026** by:
 
 <table>
   <tr>
-    <td align="center"><b>Hammad Ali Shah</b><br/><sub>Developer</sub></td>
+    <td align="center"><b>Hamad Ali Shah</b><br/><sub>Developer</sub></td>
     <td align="center"><b>Sameer Talreja</b><br/><sub>Developer</sub></td>
     <td align="center"><b>Naeem Ahmed</b><br/><sub>Developer</sub></td>
   </tr>
@@ -575,7 +568,7 @@ Built with ❤️ at **AI Hackathon 2026** by:
 
 ## 📝 License
 
-This project was built for the **AI Hackathon 2026**. Please contact the team for licensing inquiries.
+This project was built at the **Atomcamp AI Hackathon 2026**. Please contact the team for licensing inquiries.
 
 ---
 
