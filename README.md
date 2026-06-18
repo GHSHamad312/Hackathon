@@ -111,11 +111,11 @@ streamlit run app.py
 
 ## 👥 Team
 
-Built with ❤️ at **AI Hackathon 2026** by:
+Built at **Atomcamp AI Hackathon 2026 at buitems** by:
 
 | Name | Role |
 |---|---|
-| **Hammad Ali Shah** | Developer |
+| **Hamad Ali Shah** | Developer |
 | **Sameer Talreja** | Developer |
 | **Naeem Ahmed** | Developer |
 
