@@ -305,16 +305,47 @@ with st.sidebar:
     st.caption("Enterprise Workflow Automation Engine")
     
     st.markdown("---")
-    
-    # Simple status indicator for API key in sidebar
-    has_env_key = api_key_is_set()
-    has_temp_key = bool(st.session_state["temp_api_key"].strip())
-    is_authenticated = has_env_key or has_temp_key
-    
-    if is_authenticated:
-        st.success("🔒 System Authenticated")
+
+    # ── API Key Management ───────────────────────────────────────────
+    st.markdown("##### 🔑 API Key")
+    has_secrets_key = False
+    try:
+        has_secrets_key = bool("GOOGLE_API_KEY" in st.secrets and st.secrets["GOOGLE_API_KEY"])
+    except Exception:
+        pass
+    has_env_key = bool(os.getenv("GOOGLE_API_KEY", "").strip())
+    has_runtime_key = bool(st.session_state["temp_api_key"].strip())
+    is_authenticated = has_secrets_key or has_env_key or has_runtime_key
+
+    if has_runtime_key:
+        st.success("🔒 Using your runtime API key")
+    elif has_secrets_key or has_env_key:
+        st.success("🔒 Using pre-configured API key")
     else:
-        st.error("🔓 Authentication Required")
+        st.error("🔓 No API key — enter one below")
+
+    with st.expander("Enter your own API key" if is_authenticated else "⚠️ Enter API key to continue", expanded=not is_authenticated):
+        if has_secrets_key or has_env_key:
+            st.caption("A default key is already configured. You can optionally override it with your own.")
+        api_key_input = st.text_input(
+            "Google Gemini API Key",
+            type="password",
+            placeholder="AIzaSy…",
+            help="Get your key from Google AI Studio. Stored in memory only — cleared when your session ends.",
+            label_visibility="collapsed",
+        )
+        col_set, col_clear = st.columns(2)
+        with col_set:
+            if st.button("Set Key", use_container_width=True, type="primary"):
+                if api_key_input.strip():
+                    st.session_state["temp_api_key"] = api_key_input.strip()
+                    st.rerun()
+                else:
+                    st.warning("Paste a key first.")
+        with col_clear:
+            if st.button("Clear Key", use_container_width=True, disabled=not has_runtime_key):
+                st.session_state["temp_api_key"] = ""
+                st.rerun()
 
     st.markdown("---")
     st.markdown("##### 📚 Knowledge Base Setup")
@@ -377,30 +408,13 @@ if not is_authenticated:
     st.markdown("""
     PolicyPilot AI uses a **6-Agent Architecture** to fully automate HR and IT workflows while guaranteeing 100% compliance with your company's actual policies.
     
-    To get started, you need to connect the engine to the Google Gemini API.
+    👈 **Enter your Google Gemini API key in the sidebar** to get started.
     """)
     
     st.markdown("---")
     col1, col2 = st.columns([2, 1])
     with col1:
-        st.markdown("#### 🔑 Connect Your Enterprise API Key")
-        st.markdown("Enter your Gemini API key below. Your key is stored securely in memory and will be cleared when your session ends.")
-        
-        api_key_input = st.text_input(
-            "Google Gemini API Key",
-            type="password",
-            placeholder="AIzaSy...",
-            help="Get your API key from Google AI Studio."
-        )
-        
-        if st.button("Authenticate System", type="primary"):
-            if api_key_input.strip():
-                st.session_state["temp_api_key"] = api_key_input.strip()
-                os.environ["GOOGLE_API_KEY"] = api_key_input.strip()
-                st.rerun()
-            else:
-                st.error("Please enter a valid API key.")
-    
+        st.warning("🔑 **Authentication Required** — Open the sidebar (top-left arrow) and paste your Gemini API key to unlock the system.", icon="⚠️")
     with col2:
         st.info(
             "**System Architecture:**\n\n"

@@ -16,13 +16,20 @@ _PROJECT_ROOT = Path(__file__).resolve().parent
 load_dotenv(_PROJECT_ROOT / ".env")
 
 def get_secret(key: str, default: str | None = None) -> str | None:
-    """Fetch from st.secrets first, then fall back to env var."""
+    """Fetch API key with priority: runtime session key → st.secrets → env var."""
     try:
         import streamlit as st
+        # 1) Runtime key entered by the user in the UI (highest priority)
+        if key == "GOOGLE_API_KEY":
+            runtime_key = st.session_state.get("temp_api_key", "")
+            if runtime_key and runtime_key.strip():
+                return runtime_key.strip()
+        # 2) Streamlit Cloud secrets
         if key in st.secrets:
             return st.secrets[key]
     except Exception:
         pass
+    # 3) .env / OS environment variable
     return os.getenv(key, default)
 
 def __getattr__(name: str):
