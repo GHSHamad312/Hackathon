@@ -30,7 +30,6 @@
   <a href="#-usage-guide">Usage</a> •
   <a href="#-how-it-works">How It Works</a> •
   <a href="#-tech-stack">Tech Stack</a> •
-  <a href="#-testing">Testing</a> •
   <a href="#-team">Team</a>
 </p>
 
@@ -202,7 +201,7 @@ PolicyPilot AI uses a **sequential multi-agent architecture** where each agent i
 ```
 policypilot_ai/
 │
-├── app.py                      # 🎯 Main Streamlit application (884 lines)
+├── app.py                      # 🎯 Main Streamlit application
 │                                #    - Hero UI, sidebar, 4-tab layout
 │                                #    - Pipeline orchestration with live status
 │                                #    - Policy Q&A chat, history, agent trace
@@ -220,7 +219,6 @@ policypilot_ai/
 ├── .env.example                # 🔐 Environment variable template
 │
 ├── agents/                     # 🤖 Multi-Agent Modules
-│   ├── __init__.py
 │   ├── planner.py              #    Agent 1: Task decomposition
 │   ├── retriever.py            #    Agent 2: FAISS vector search per task
 │   ├── reasoning.py            #    Agent 3: Policy synthesis & action planning
@@ -229,7 +227,6 @@ policypilot_ai/
 │   └── action.py               #    Agent 6: Enterprise action simulation
 │
 ├── prompts/                    # 💬 LLM System Prompts
-│   ├── __init__.py
 │   ├── planner_prompt.py       #    Planner agent instructions
 │   ├── reasoning_prompt.py     #    Reasoning agent instructions
 │   ├── compliance_prompt.py    #    Compliance audit instructions
@@ -237,13 +234,11 @@ policypilot_ai/
 │   └── action_prompt.py        #    Action simulation instructions
 │
 ├── rag/                        # 📚 Retrieval-Augmented Generation
-│   ├── __init__.py
 │   ├── ingest.py               #    PDF extraction + chunking pipeline
 │   ├── vectorstore.py          #    FAISS index build/load/save/clear
 │   └── retrieval.py            #    Similarity search + context formatting
 │
 ├── utils/                      # 🛠️ Shared Utilities
-│   ├── __init__.py
 │   ├── gemini_client.py        #    Centralized Gemini LLM & embedding config
 │   ├── helpers.py              #    JSON parsing, retry logic, text utilities
 │   └── pdf.py                  #    PDF utility functions
@@ -252,15 +247,6 @@ policypilot_ai/
 │   ├── Acme_HR_Policy_2026.pdf
 │   ├── Employee_Lifecycle_SOP_v4.pdf
 │   └── IT_Asset_Security_Policy_v2.pdf
-│
-├── test_agents.py              # 🧪 Agent unit tests
-├── test_pipeline.py            # 🧪 Pipeline integration tests
-├── test_rag.py                 # 🧪 RAG system tests
-├── simulate_ui_run.py          # 🖥️ CLI simulation of the full pipeline
-│
-├── uploaded_docs/              # 📤 User-uploaded PDFs (runtime)
-├── outputs/                    # 📥 Generated PDF outputs (runtime)
-├── vectorstore_data/           # 💾 Persisted FAISS index files (runtime)
 │
 └── .streamlit/
     └── config.toml             # 🎨 Streamlit theme configuration (teal/white)
@@ -464,33 +450,6 @@ PolicyPilot resolves the Google API key with this priority chain:
 | **PDF Extraction** | [pypdf](https://pypdf.readthedocs.io/) | Page-by-page text extraction from uploaded PDFs |
 | **PDF Generation** | [ReportLab](https://www.reportlab.com/) | Professional PDF document creation with styling |
 | **Config** | [python-dotenv](https://github.com/theskumar/python-dotenv) | Environment variable management |
-
----
-
-## 🧪 Testing
-
-The project includes comprehensive test suites:
-
-```bash
-# Run all agent tests
-python -m pytest test_agents.py -v
-
-# Run pipeline integration tests
-python -m pytest test_pipeline.py -v
-
-# Run RAG system tests
-python -m pytest test_rag.py -v
-
-# Run the CLI simulation (no browser needed)
-python simulate_ui_run.py
-```
-
-| Test File | Coverage |
-|:---|:---|
-| `test_agents.py` | Individual agent unit tests (planner, reasoning, compliance, generator, action) |
-| `test_pipeline.py` | End-to-end pipeline integration tests |
-| `test_rag.py` | PDF ingestion, chunking, vector store build/load, retrieval |
-| `simulate_ui_run.py` | Full pipeline CLI simulation without Streamlit UI |
 
 ---
 

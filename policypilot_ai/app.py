@@ -164,6 +164,74 @@ st.markdown(
         margin-bottom: 1.5rem;
         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
+
+    /* ── API Error card ── */
+    .api-error-card {
+        background: linear-gradient(135deg, #1a0a0a 0%, #2d0f0f 100%);
+        border: 1px solid #7f1d1d;
+        border-left: 5px solid #ef4444;
+        border-radius: 12px;
+        padding: 1.5rem 1.75rem;
+        margin: 1rem 0 1.5rem 0;
+        box-shadow: 0 4px 24px rgba(239,68,68,0.18), 0 1px 4px rgba(0,0,0,0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    .api-error-card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #ef4444, #f97316, #ef4444);
+        background-size: 200% 100%;
+        animation: errorShimmer 2.5s linear infinite;
+    }
+    @keyframes errorShimmer {
+        0%   { background-position: 0% 0%; }
+        100% { background-position: 200% 0%; }
+    }
+    .api-error-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    .api-error-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #fca5a5;
+        margin-bottom: 0.35rem;
+        letter-spacing: -0.01em;
+    }
+    .api-error-type {
+        display: inline-block;
+        background: rgba(239,68,68,0.2);
+        color: #fca5a5;
+        border: 1px solid rgba(239,68,68,0.4);
+        padding: 0.15rem 0.65rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 0.75rem;
+    }
+    .api-error-msg {
+        font-size: 0.92rem;
+        color: #fecaca;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        font-family: 'Inter', sans-serif;
+    }
+    .api-error-hint {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
+        color: #94a3b8;
+        line-height: 1.6;
+    }
+    .api-error-hint strong { color: #cbd5e1; }
     .warning-box strong {
         display: block;
         font-size: 1.1rem;
@@ -285,6 +353,67 @@ from agents.compliance import check_compliance
 from agents.generator import generate_documents, export_to_pdf
 from agents.action import simulate_actions
 
+
+# ── API Error Helper ─────────────────────────────────────────────────
+def _parse_api_error(exc: Exception) -> tuple[str, str, str]:
+    """Return (error_type_label, short_message, hint) from any exception."""
+    raw = str(exc)
+    # Detect Google / LangChain API errors
+    if "UNAUTHENTICATED" in raw or "401" in raw:
+        return (
+            "Authentication Error · 401",
+            "Your API key was rejected. The key may be invalid, expired, or belong to a project that hasn't enabled the Generative Language API.",
+            "💡 <strong>Fix:</strong> Double-check your key in <a href='https://aistudio.google.com/app/apikey' target='_blank' style='color:#93c5fd;'>Google AI Studio</a>. Make sure the <em>Generative Language API</em> is enabled for your project.",
+        )
+    if "PERMISSION_DENIED" in raw or "403" in raw:
+        return (
+            "Permission Denied · 403",
+            "The API key does not have permission to call this service. Billing may not be enabled on the associated Google Cloud project.",
+            "💡 <strong>Fix:</strong> Enable billing and the <em>Generative Language API</em> in your <a href='https://console.cloud.google.com/' target='_blank' style='color:#93c5fd;'>Google Cloud Console</a>.",
+        )
+    if "RESOURCE_EXHAUSTED" in raw or "429" in raw or "quota" in raw.lower():
+        return (
+            "Quota Exceeded · 429",
+            "Your API quota has been exhausted. Too many requests were made in a short period.",
+            "💡 <strong>Fix:</strong> Wait a few minutes, then try again. Consider upgrading your API plan for higher rate limits.",
+        )
+    if "INVALID_ARGUMENT" in raw or "400" in raw:
+        return (
+            "Invalid Request · 400",
+            "The API received a malformed request. This is often caused by an unsupported model name or an empty prompt.",
+            "💡 <strong>Fix:</strong> Ensure your API key is for Gemini and the model name is correct.",
+        )
+    if "ServiceUnavailable" in raw or "503" in raw or "502" in raw:
+        return (
+            "Service Unavailable · 503",
+            "Google's API servers are temporarily unreachable. This is a transient outage on Google's side.",
+            "💡 <strong>Fix:</strong> Wait a moment and try again. Check <a href='https://status.cloud.google.com/' target='_blank' style='color:#93c5fd;'>Google Cloud Status</a> for ongoing incidents.",
+        )
+    # Generic fallback
+    short = raw[:280] + ("…" if len(raw) > 280 else "")
+    return (
+        "API / Runtime Error",
+        short,
+        "💡 <strong>Fix:</strong> Check your API key, network connection, and try again.",
+    )
+
+
+def _render_api_error(exc: Exception, context: str = "") -> None:
+    """Render a polished error card in the Streamlit UI."""
+    err_type, err_msg, err_hint = _parse_api_error(exc)
+    ctx_line = f'<div style="font-size:0.8rem;color:#64748b;margin-bottom:0.75rem;">While: {context}</div>' if context else ""
+    html = f"""
+    <div class="api-error-card">
+        <span class="api-error-icon">🚨</span>
+        <div class="api-error-title">API Error Encountered</div>
+        <div class="api-error-type">{err_type}</div>
+        {ctx_line}
+        <div class="api-error-msg">{err_msg}</div>
+        <div class="api-error-hint">{err_hint}</div>
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
+
 # ── Session State Init ───────────────────────────────────────────────
 defaults = {
     "temp_api_key": "",
@@ -363,16 +492,19 @@ with st.sidebar:
             st.warning("Please upload at least one PDF first.")
         else:
             with st.spinner("Processing and indexing documents..."):
-                chunks, warnings = ingest_pdfs(uploaded_files)
-                if warnings:
-                    for w in warnings:
-                        st.sidebar.warning(w)
-                if chunks:
-                    build_vectorstore(chunks)
-                    st.session_state["chunks_indexed"] = len(chunks)
-                    st.success(f"✅ Successfully indexed {len(chunks)} text chunks from {len(uploaded_files)} document(s)!")
-                else:
-                    st.error("Failed to extract text from the provided PDFs.")
+                try:
+                    chunks, warnings = ingest_pdfs(uploaded_files)
+                    if warnings:
+                        for w in warnings:
+                            st.sidebar.warning(w)
+                    if chunks:
+                        build_vectorstore(chunks)
+                        st.session_state["chunks_indexed"] = len(chunks)
+                        st.success(f"✅ Successfully indexed {len(chunks)} text chunks from {len(uploaded_files)} document(s)!")
+                    else:
+                        st.error("Failed to extract text from the provided PDFs.")
+                except Exception as _kb_err:
+                    _render_api_error(_kb_err, "Building Knowledge Base / Embedding documents")
 
     if index_exists():
         st.caption("🟢 Vector store is active and ready.")
@@ -507,7 +639,7 @@ with tab_workflow:
                 s.update(label=f"🗓️ **Agent 1: Task Planner** — ✔ Created {task_count} sub-tasks ({elapsed:.1f}s)", state="complete", expanded=False)
         except Exception as e:
             s.update(label="🗓️ **Agent 1: Task Planner** — ❌ Fatal Error", state="error")
-            st.error(f"Planner failed: {e}")
+            _render_api_error(e, "Agent 1: Task Planner")
             st.stop()
 
         # 2. Retrieval
@@ -522,7 +654,7 @@ with tab_workflow:
                 s.update(label=f"🔍 **Agent 2: Policy Retriever** — ✔ Extracted {len(retrieval_result)} policy excerpts ({elapsed:.1f}s)", state="complete", expanded=False)
         except Exception as e:
             s.update(label="🔍 **Agent 2: Policy Retriever** — ❌ Fatal Error", state="error")
-            st.error(f"Retrieval failed: {e}")
+            _render_api_error(e, "Agent 2: Policy Retriever")
             st.stop()
 
         # 3. Reasoning
@@ -543,7 +675,7 @@ with tab_workflow:
                 s.update(label=f"🧠 **Agent 3: Reasoner** — ✔ Formulated {action_count} strategic actions ({elapsed:.1f}s)", state="complete", expanded=False)
         except Exception as e:
             s.update(label="🧠 **Agent 3: Reasoner** — ❌ Fatal Error", state="error")
-            st.error(f"Reasoning failed: {e}")
+            _render_api_error(e, "Agent 3: Reasoner")
             st.stop()
 
         # 4. Compliance
@@ -563,7 +695,7 @@ with tab_workflow:
                 s.update(label=f"✅ **Agent 4: Compliance Auditor** — ✔ Audit Complete. Score: {score}/100 ({elapsed:.1f}s)", state="complete", expanded=False)
         except Exception as e:
             s.update(label="✅ **Agent 4: Compliance Auditor** — ❌ Fatal Error", state="error")
-            st.error(f"Compliance failed: {e}")
+            _render_api_error(e, "Agent 4: Compliance Auditor")
             st.stop()
 
         # 5. Generator
@@ -587,7 +719,7 @@ with tab_workflow:
                 s.update(label=f"📝 **Agent 5: Document Generator** — ✔ Compiled compliant document packet ({elapsed:.1f}s)", state="complete", expanded=False)
         except Exception as e:
             s.update(label="📝 **Agent 5: Document Generator** — ❌ Fatal Error", state="error")
-            st.error(f"Generation failed: {e}")
+            _render_api_error(e, "Agent 5: Document Generator")
             st.stop()
 
         # 6. Action
@@ -604,7 +736,7 @@ with tab_workflow:
                 s.update(label=f"⚡ **Agent 6: Action Simulator** — ✔ Simulated {triggered} API integrations ({elapsed:.1f}s)", state="complete", expanded=False)
         except Exception as e:
             s.update(label="⚡ **Agent 6: Action Simulator** — ❌ Fatal Error", state="error")
-            st.error(f"Action failed: {e}")
+            _render_api_error(e, "Agent 6: Action Simulator")
             st.stop()
 
         total_time = time.time() - pipeline_start
@@ -796,7 +928,8 @@ with tab_chat:
                     ])
                     answer = response.content
                 except Exception as e:
-                    answer = f"Error generating response: {e}"
+                    err_type, err_msg, err_hint = _parse_api_error(e)
+                    answer = f"⚠️ **{err_type}** — {err_msg}"
 
             st.markdown(f'<div class="chat-ai"><strong>PolicyPilot AI:</strong><br>{answer}</div>', unsafe_allow_html=True)
 

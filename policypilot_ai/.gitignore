@@ -12,6 +12,7 @@ __pycache__/
 # Project runtime directories
 outputs/
 uploaded_docs/
+vectorstore_data/
 
 # IDEs
 .idea/
